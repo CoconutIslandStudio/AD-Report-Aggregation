@@ -3,6 +3,8 @@ var vungleProvider = function(apiid){
   var vungleAPIID = apiid;
   
   this.Process = function(spreadsheet,sheetConfig){
+      Logger.log('-------------Vungle--------------')
+  
     var auth_str = 'Bearer '+vungleAPIID;
     var req_option = {
     'method': 'get',
@@ -25,7 +27,7 @@ var vungleProvider = function(apiid){
     
     var query_str = Utilities.formatString('dimensions=%s&aggregates=%s&start=%s&end=%s&applicationId=%s,incentivized=%s',
                                            query_dimension,query_aggregates,query_start,query_end,query_appid,query_incentivized);
-    Logger.log('querystr: %s',query_str);
+    Logger.log('Vungle querystr: %s',query_str);
     var req_url = 'https://report.api.vungle.com/ext/pub/reports/performance?';
     //Make Post
     var resp = UrlFetchApp.fetch(req_url+query_str, req_option);
@@ -48,12 +50,27 @@ var vungleProvider = function(apiid){
     
     sheet.appendRow(["Day","Revenue","eCPM",'Clicks','Completes','Views'])
     
+    var dataobj = {};
+    
     for(var i=1;i < datajson.length; i++){
       var data = datajson[i];
  
       var objs = [data['date'],data['revenue'],data['ecpm'],data['clicks'],data['completes'],data['views']];
-      sheet.appendRow(objs);
+      dataobj[data['date']] = objs;
+      //sheet.appendRow(objs);
     }
+    
+    ForeachDate(query_start,query_end,function(x){
+        var day = FormatDate(x);
+        var daydata = dataobj[day];
+        if(daydata){
+            sheet.appendRow(daydata);
+        }
+        else{
+            sheet.appendRow([day,0,0,0,0,0]);
+        }
+    })
+    
   }
   
   

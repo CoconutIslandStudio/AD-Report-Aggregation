@@ -11,6 +11,8 @@ var UnityProvider = function(unitykey){
   
   this.Process = function(spreadsheet,sheetconfig){
    
+   
+   Logger.log('---------UnityAds--------')
      
     var query_field = 'revenue,started,views,eCPM';
     var query_start = sheetconfig.StartTime;
@@ -37,7 +39,7 @@ var UnityProvider = function(unitykey){
     
     var csvData = Utilities.parseCsv(receive_data);
   
-    Logger.log(csvData.length);
+    Logger.log("data length:" +csvData.length);
     
     
     var sheet = spreadsheet.getSheetByName(sheetconfig.Table);
@@ -47,16 +49,30 @@ var UnityProvider = function(unitykey){
     var dataheader = ['Day','Revenue','Ecpm','Clicks','Completes','View'];
     sheet.appendRow(dataheader);
     
+    
+    var dataobj = {};
+    
     for(var i = 1;i< csvData.length;i++){
     
-    var cd = csvData[i];
-    var datestr = cd[0].substr(0,10);
+        var cd = csvData[i];
+        var datestr = cd[0].substr(0,10);
+        var data = [datestr,cd[1], (cd[1] * 1000 / cd[3]).toFixed(2) ,'',cd[3],cd[2]];
+        
+        Logger.log(datestr);
+        dataobj[datestr] = data;
     
-    var data = [datestr,cd[1], (cd[1] * 1000 / cd[3]).toFixed(2) ,'',cd[3],cd[2]];
-    //Logger.log(data);
-    sheet.appendRow(data);
+    }
     
-  }
+    ForeachDate(query_start,query_end,function(x){
+      var day = FormatDate(x);
+      var data = dataobj[day];
+      if(data){
+          sheet.appendRow(data);
+      }
+      else{
+          sheet.appendRow([day,0,0,0,0,0]);
+      }
+    });
     
   }
   

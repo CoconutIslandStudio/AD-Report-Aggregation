@@ -26,3 +26,15 @@ function DayElapsed(date1,date2){
   return (date2.getTime() - date1.getTime())/1000/3600/24
   
 }
+
+function ForeachDate(sdate,edate,func){
+    var d1 = new Date(sdate);
+    var d2 = new Date(edate);
+  
+    if(d1 > d2) return;
+    var d = d1;
+    while(d < d2){
+      func(d);
+      d.setDate(d.getDate()+1);
+    }
+}

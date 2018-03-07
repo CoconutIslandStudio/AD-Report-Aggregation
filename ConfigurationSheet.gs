@@ -44,10 +44,11 @@ var ConfigSheet = function(sheetId,sheetName){
       
       var error = null;
       
+      var log = "";
       try{
         var DataProvider = GetDataProvider(data.Provider);
         var dp = DataProvider(generalConfig);
-        dp.Process(spreadsheet,data);
+         log = dp.Process(spreadsheet,data);
       }catch(err){
         error = err;
       }
@@ -55,11 +56,11 @@ var ConfigSheet = function(sheetId,sheetName){
       var cell =sheet.getRange('C'+(data.sheetRow+1));
       
       if(error == null){
-        cell.setValue(data.Table+"\nSuccess\n["+new Date()+"]")
+        cell.setValue(data.Table+"\nSuccess\n["+new Date()+"]" +"\n log:"+ log)
         cell.setFontColor("#000000");
       }
       else{
-        cell.setValue(data.Table+"\nFail\n["+new Date()+"]\n"+error);
+        cell.setValue(data.Table+"\nFail\n["+new Date()+"]\n"+error + +"\n log:"+ log);
         cell.setFontColor("#ff0000");
       }
       
