@@ -7,7 +7,7 @@ function DataProvider_Applovin(generalConfig){
 }
 
 
-
+//https://a-support.applovin.com/hc/zh-cn/articles/115000784688-Basic-Reporting-API
 
 var ApplovinProvider = function(reportapikey){
  
@@ -21,18 +21,24 @@ var ApplovinProvider = function(reportapikey){
       var query_filter_pkg_name = ppkgname;
       var query_start = psdata;
       var query_end = pedata;
-      var query_str = Utilities.formatString('api_key=%s&start=%s&end=%s&columns=%s&report_type=%s&filter_package_name=%s&format=%s',
+      
+      var query_str = Utilities.formatString('api_key=%s&start=%s&end=%s&columns=%s&report_type=%s&format=%s',
                                         reportAPIKey,
                                         query_start,
                                         query_end,
                                         query_columns,
                                         query_report_type,
-                                        query_filter_pkg_name,
                                         query_format
                                         );
+      
+      if(query_filter_pkg_name != undefined){
+          query_str += ("&filter_package_name="+query_filter_pkg_name);
+      }
       var query_url = 'https://r.applovin.com/report?';
       
       var resp = UrlFetchApp.fetch(query_url + query_str);
+      
+      Logger.log("Applovin req_url: "+ query_url + query_str);
       
      
       
@@ -72,7 +78,12 @@ var ApplovinProvider = function(reportapikey){
     
     for(var i =0;i< csvData.length;i++){
       var data = csvData[i];
-      var obj = [data[0],data[4],data[3],data[2],data[1],0,1,'Applovin'];
+      
+      var rev = data[4].toString();
+      if(rev[0] ==='$'){
+        rev = rev.substr(1);
+      }
+      var obj = [data[0],rev,data[3],data[2],data[1],0,1,'Applovin'];
       
       dataobj[data[0]] = obj;
     }

@@ -10,6 +10,7 @@ var MobvistaProvider = function(sdkkey,sdksecret){
  
  
  Logger.log('=========== Mobvista ===========')
+ //Mobvista has no platform metrics
   var mv_sdkkey = sdkkey;
   var mv_sdksecret = sdksecret;
   
@@ -44,11 +45,29 @@ var MobvistaProvider = function(sdkkey,sdksecret){
     var jdata = datajson['data'];
     var jdatalist = jdata['lists'];
     
+    var hasAPPID = (sheetconfig.APPID != undefined);
+    
     for(var i=0;i< jdatalist.length;i++){
        var dataitem = jdatalist[i];
-       if(!strComp(dataitem.app_id,sheetconfig.APPID)) continue;
-       var dt = dataitem.date.toString();
-       dataary[dt] = dataitem;
+       
+       if(hasAPPID)
+       {
+         if(!strComp(dataitem.app_id,sheetconfig.APPID)) continue;
+         var dt = dataitem.date.toString();
+         dataary[dt] = dataitem;
+       }
+       else{
+         var dt = dataitem.date.toString();
+         var lastRecord = dataary[dt];
+         if(lastRecord){
+           lastRecord.est_revenue += dataitem.est_revenue;
+           lastRecord.click+=dataitem.click;
+           lastRecord.impression+=dataitem.impression;
+         }
+         else{
+           dataary[dt] = dataitem;
+         }
+       }
     }
   }
   

@@ -4,6 +4,8 @@ var vungleProvider = function(apiid){
   
   this.Process = function(spreadsheet,sheetConfig){
       Logger.log('-------------Vungle--------------')
+      
+    //https://support.vungle.com/hc/zh-cn/articles/211365828-Reporting-API-2-0-for-Publishers
   
     var auth_str = 'Bearer '+vungleAPIID;
     var req_option = {
@@ -13,8 +15,6 @@ var vungleProvider = function(apiid){
       'Vungle-Version': 1,
       'Accept': 'application/json'
     }};
-    //Haywire Hospital (iOS)
-    //https://dashboard.vungle.com/dashboard/applications/567a4807d1a7bc3c70000026/details
     var query_appid = sheetConfig.AppID;
     
     //incentivized ad only
@@ -25,12 +25,37 @@ var vungleProvider = function(apiid){
     var query_start = sheetConfig.StartTime;
     var query_end = sheetConfig.EndTime;
     
-    var query_str = Utilities.formatString('dimensions=%s&aggregates=%s&start=%s&end=%s&applicationId=%s,incentivized=%s',
+    var query_platform = sheetConfig.Platform;
+    if(query_platform == undefined) query_platform = "all";
+    
+    var platform_seperate = false;
+    if(strComp(query_platform,"android") || strComp(query_platform,"ios")){
+        platform_seperate = true;
+        
+        query_dimension = query_dimension +",platform";
+    }
+    
+    var query_str = "";
+    
+    if(query_appid == undefined)
+    {
+        query_str = Utilities.formatString('dimensions=%s&aggregates=%s&start=%s&end=%s&incentivized=%s',
+                                           query_dimension,query_aggregates,query_start,query_end,query_incentivized);
+    }
+    else
+    {
+        query_str = Utilities.formatString('dimensions=%s&aggregates=%s&start=%s&end=%s&applicationId=%s&incentivized=%s',
                                            query_dimension,query_aggregates,query_start,query_end,query_appid,query_incentivized);
+    }
+    
+
+                                           
+                                           
     Logger.log('Vungle querystr: %s',query_str);
     var req_url = 'https://report.api.vungle.com/ext/pub/reports/performance?';
     //Make Post
     var resp = UrlFetchApp.fetch(req_url+query_str, req_option);
+    
     
     var receive_data = resp.getContentText();
     var datajson = JSON.parse(receive_data);
@@ -64,10 +89,21 @@ var vungleProvider = function(apiid){
       var complete = data['completes'];
       var view = data['views'];
       var completeRate = (complete == 0 ? 1: (complete*1.0 / view)).toFixed(2);
- 
+      //                0              1            2                  3            4                5
       var objs = [data['date'],data['revenue'],data['ecpm'],data['clicks'],data['completes'],data['views'],completeRate,'Vungle'];
       
-      dataobj[data['date']] = objs;
+      if(platform_seperate){
+      
+        var platform = data['platform'].toLowerCase();
+        if(strComp(platform,query_platform)){
+            dataobj[data['date']] = objs;
+        }
+      }
+      else{
+        dataobj[data['date']] = objs;
+      }
+      
+      
       //sheet.appendRow(objs);
     }
     

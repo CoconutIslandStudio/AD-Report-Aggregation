@@ -13,6 +13,9 @@ var UnityProvider = function(unitykey){
    
    
    Logger.log('---------UnityAds--------')
+   
+   //[Warning] UnityAds analytics api currently all return (unknown platform) for platform field. [Warning]
+   //https://unityads.unity3d.com/help/monetization/statistics
      
     var query_field = 'revenue,started,views,eCPM';
     var query_start = sheetconfig.StartTime;
@@ -21,12 +24,28 @@ var UnityProvider = function(unitykey){
     
     Logger.log('querytime %s - %s',query_start,query_end);
     
-    var query_str = Utilities.formatString('apikey=%s&fields=%s&start=%s&end=%s&sourceIds=%s&splitBy=none',
+    
+    var fmt_str = 'apikey=%s&fields=%s&start=%s&end=%s&splitBy=none';
+    
+    var query_platform = sheetconfig.Platform;
+    if(query_platform == undefined) query_platform = "all";
+    
+    var platform_seperate = false;
+//    if(strComp(query_platform,"android") || strComp(query_platform,"ios")){
+//        platform_seperate = true;
+//        
+//        fmt_str = (fmt_str+"&platforms="+ query_platform);
+//    }
+//    
+//    if(query_sourceIds != undefined){
+//        fmt_str = (fmt_str + "&sourceIds="+ query_sourceIds);
+//    }
+    
+    var query_str = Utilities.formatString(fmt_str,
                                            reportkey,
                                            query_field,
                                            query_start,
-                                           query_end,
-                                           query_sourceIds);
+                                           query_end);
     
     var req_url = 'https://gameads-admin.applifier.com/stats/monetization-api?';
     var req_option = {
@@ -34,6 +53,9 @@ var UnityProvider = function(unitykey){
     'headers': {
       'Accept': 'application/json'
     }};
+    
+    Logger.log("unity_req_url: "+req_url+query_str);
+    
     var resp = UrlFetchApp.fetch(req_url+query_str, req_option);
     var receive_data = resp.getContentText();
     
@@ -104,6 +126,9 @@ var UnityProvider = function(unitykey){
     'headers': {
       'Accept': 'application/json'
     }};
+    
+
+    
     var resp = UrlFetchApp.fetch(req_url+query_str, req_option);
     var receive_data = resp.getContentText();
     

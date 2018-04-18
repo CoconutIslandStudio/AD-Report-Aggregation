@@ -18,15 +18,42 @@ var ChanceProvider = function(username,key){
     //Make Post
     var resp = UrlFetchApp.fetch(req_url+query_str, req_option);
     
+    //Logger.log("ChanceURL: "+ req_url+query_str);
+    
     var receive_data = resp.getContentText();
     var datajson = JSON.parse(receive_data);
     
+    var appdata = null;
+    var videoDataList = {};
+    if(query_publisherId != undefined){
     
-    var appdata = datajson['data'][query_publisherId];
+      appdata = datajson['data'][query_publisherId];
+      videoDataList = appdata['40']['list'];
     
-    
-    var videoDataList = appdata['40']['list'];
-    
+    }
+    else
+    {
+      var applist = datajson['data'];
+      for(var appid in applist){
+          var itemdata = applist[appid];
+          if(!itemdata || !itemdata['40'] || !itemdata['40']['list']) continue;
+          
+          var itemVideoDataList = itemdata['40']['list'];
+          for(var day in itemVideoDataList){
+              var daydata = itemVideoDataList[day];
+              if(videoDataList[day] == undefined){
+                  videoDataList[day] = daydata;
+              }
+              else{
+
+                  videoDataList[day]['income'] =parseFloat(videoDataList[day]['income']) +  parseFloat(daydata['income']);
+                  videoDataList[day]['clickvideopic'] =parseInt(videoDataList[day]['clickvideopic'])+ parseInt(daydata['clickvideopic']);
+                  videoDataList[day]['playSuccess'] = parseInt(videoDataList[day]['playSuccess'])+ parseInt(daydata['playSuccess']);
+              }
+          }
+      }
+    }
+
     
     
     var sheet = spreadsheet.getSheetByName(sheetConfig.Table);
@@ -51,6 +78,8 @@ var ChanceProvider = function(username,key){
       }
     });
   }
+  
+    //-------------------------------------------------------------------------------
   
    this.ProcessRealTime = function(spreadsheet,sheetConfig){
    
