@@ -46,28 +46,43 @@ var vungleProvider = function(apiid){
     
     
     var sheet = spreadsheet.getSheetByName(sheetConfig.Table);
-    sheet.clear();
+    //sheet.clear();
     
-    sheet.appendRow(["Day","Revenue","eCPM",'Clicks','Completes','Views'])
+    sheet.getRange('A1:H1').setValues([["Day","Revenue","eCPM",'Clicks','Impressions','Views','CompleteRate','Provider']]);
+    
+    query_start = SheetClear(sheet,query_start,query_end);
+    
+    Logger.log("sheet clear: "+ query_start);
+    
     
     var dataobj = {};
     
     for(var i=1;i < datajson.length; i++){
       var data = datajson[i];
+      
+      
+      var complete = data['completes'];
+      var view = data['views'];
+      var completeRate = (complete == 0 ? 1: (complete*1.0 / view)).toFixed(2);
  
-      var objs = [data['date'],data['revenue'],data['ecpm'],data['clicks'],data['completes'],data['views']];
+      var objs = [data['date'],data['revenue'],data['ecpm'],data['clicks'],data['completes'],data['views'],completeRate,'Vungle'];
+      
       dataobj[data['date']] = objs;
       //sheet.appendRow(objs);
     }
+    
+    Logger.log(query_start+"-"+query_end);
     
     ForeachDate(query_start,query_end,function(x){
         var day = FormatDate(x);
         var daydata = dataobj[day];
         if(daydata){
+            //SheetSetRow(sheet,'A','H',rowindex,daydata);
             sheet.appendRow(daydata);
         }
         else{
-            sheet.appendRow([day,0,0,0,0,0]);
+            //SheetSetRow(sheet,'A','H',rowindex,[day,0,0,0,0,0,1,'Vungle']);
+            sheet.appendRow([day,0,0,0,0,0,1,'Vungle']);
         }
     })
     

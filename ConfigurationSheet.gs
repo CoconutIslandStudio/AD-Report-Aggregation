@@ -37,7 +37,6 @@ var ConfigSheet = function(sheetId,sheetName){
   }
   
   this.Run = function(){
-
     for(var i =0;i<sheetConfig.length;i++){
       var data = sheetConfig[i];
       
@@ -63,8 +62,34 @@ var ConfigSheet = function(sheetId,sheetName){
         cell.setValue(data.Table+"\nFail\n["+new Date()+"]\n"+error + +"\n log:"+ log);
         cell.setFontColor("#ff0000");
       }
+    }
+  }
+  
+  this.GetRealTimeData = function(){
+      for(var i =0;i<sheetConfig.length;i++){
+      var data = sheetConfig[i];
       
+      var error = null;
       
+      var log = "";
+      try{
+        var DataProvider = GetDataProvider(data.Provider);
+        var dp = DataProvider(generalConfig);
+         log = dp.ProcessRealTime(spreadsheet,data);
+      }catch(err){
+        error = err;
+      }
+      
+      var cell =sheet.getRange('C'+(data.sheetRow+1));
+      
+      if(error == null){
+        cell.setValue(data.Table+"\nSuccess\n["+new Date()+"]" +"\n log:"+ log)
+        cell.setFontColor("#000000");
+      }
+      else{
+        cell.setValue(data.Table+"\nFail\n["+new Date()+"]\n"+error + +"\n log:"+ log);
+        cell.setFontColor("#ff0000");
+      }
     }
   }
 }
