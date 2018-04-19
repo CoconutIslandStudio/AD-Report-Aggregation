@@ -23,13 +23,37 @@ var ChartboostProvider = function(userid,usersig){
         
         var appid = sheetconfig.appid;
         
-        var query_str = Utilities.formatString('appId=%s&dateMin=%s&dateMax=%s&aggregate=daily&userId=%s&userSignature=%s',
-            appid,
+        var query_platform = sheetconfig.Platform;
+        
+        if(query_platform == undefined){
+            
+        }
+        else{
+          if(query_platform === "android"){
+              query_platform = "Google Play";
+          }
+          else if (query_platform === "ios")
+          {
+              query_platform = "iOS";
+          }
+          else{
+            query_platform = undefined;
+          }
+        }
+        
+        var query_str = Utilities.formatString('dateMin=%s&dateMax=%s&aggregate=daily&userId=%s&userSignature=%s',
             query_start,
             query_end,
             cb_userid,
             cb_usersig
         );
+        
+        var query_all_app = true;
+        if(appid != undefined){
+          query_all_app = false;
+          
+          query_str+=("&appId="+ appid);
+        }
         
         var query_url = "https://analytics.chartboost.com/v3/metrics/app?";
         
@@ -49,7 +73,33 @@ var ChartboostProvider = function(userid,usersig){
         for(var i=0;i<datacount;i++){
         
             var dobj = datajson[i];
-            dataary[dobj.dt] = dobj;
+            
+            if(query_platform != undefined){
+              if(!strComp(dobj.platform,query_platform)) continue;
+            }
+            
+            
+            if(query_all_app == false){
+                dataary[dobj.dt] = dobj;
+            }
+            else{
+              var lastRecord = dataary[dobj.dt];
+              
+              if(lastRecord == undefined){
+                dataary[dobj.dt] = dobj;
+              }
+              else{
+                dataary[dobj.dt].moneyEarned += dobj.moneyEarned;
+                dataary[dobj.dt].impressionsDelivered += dobj.impressionsDelivered;
+                dataary[dobj.dt].clicksDelivered += dobj.clicksDelivered;
+                dataary[dobj.dt].videoCompletedDelivered += dobj.videoCompletedDelivered;
+                dataary[dobj.dt].ecpmEarned = (dataary[dobj.dt].moneyEarned *1000/dataary[dobj.dt].impressionsDelivered);
+                
+                //Logger.log("add: "+ lastRecord.moneyEarned);
+              }
+            }
+           
+            
         }
         
         
